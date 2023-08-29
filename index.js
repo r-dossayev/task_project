@@ -2,7 +2,7 @@ const mysql = require("mysql2")
 const express = require('express')
 const  app = express()
 const port = 8787;
-// Подключение к базе данных
+
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -10,7 +10,7 @@ const connection = mysql.createConnection({
     database: 'task_w_db'
 });
 
-// Создание таблицы, если она еще не существует
+
 connection.query(`
     CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -24,8 +24,8 @@ connection.query(`
 });
 app.set('view engine', 'ejs')
 app.set('views', './templates')
-app.use(express.json()); // Для обработки JSON данных в теле запроса
-app.use(express.urlencoded({ extended: true })); // Для обработки данных формы в теле запроса
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res)=>{
     res.render('index', {test:12455 })
@@ -61,11 +61,6 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
-
-    // Здесь добавьте логику для проверки аутентификации пользователя
-    // Выборка пользователя из базы данных и сравнение пароля
-
-    // Пример проверки:
     connection.query(
         'SELECT * FROM users WHERE username = ? AND password = ?',
         [username, password],
