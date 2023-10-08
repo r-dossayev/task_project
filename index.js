@@ -9,7 +9,7 @@ app.set('views', './templates')
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
-mongo.connect('mongodb+srv://rysbekdossayev:Istemit_Pidr;@cluster0.guazwsy.mongodb.net/?retryWrites=true&w=majority', {
+mongo.connect('mongodb+srv://rysbekdossayev:~Istemit_Mal_Pidr_Urlama~@cluster0.guazwsy.mongodb.net/?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
@@ -21,67 +21,66 @@ const studentSchema = new mongo.Schema({
     gpa: Number,
 });
 
-// Создание модели данных на основе схемы
+
 const Student = mongo.model('Student', studentSchema);
 
 
-(async () => {
+
+app.get('/', async (req, res) => {
     try {
         const students = await Student.find({}).exec();
-
-        // students содержит массив всех записей из коллекции
-        console.log(students);
+        res.render('index', { test: 12455, student_list: students });
     } catch (err) {
         console.error(err);
+        res.status(500).send('Ошибка загрузки студентов');
     }
-})();
-console.log("efd")
-const userSchema = new mongo.Schema({
-    username: String,
-    password: String,
-});
-
-const User = mongo.model('User', userSchema);
-
-app.get('/', (req, res) => {
-    res.render('index', {test: 12455})
 })
+
+
 app.get('/login', (req, res) => {
     res.render('login')
 })
-app.get('/register', (req, res) => {
-    res.render('register')
+app.get('/add/student', (req, res) => {
+    res.render('add_st')
 })
-// app.post('/register', (req, res) => {
-//     const username = req.body.username;
-//     const password = req.body.password;
-//         console.log(username)
-//         console.log(password)
-//
-// });
-
-app.post('/register', async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
-    const testData = {
-        username,
-        password
-    };
+app.post('/add/student', async (req, res) => {
+    const name = req.body.name;
+    const surname = req.body.surname;
+    const gpa = req.body.gpa
+    const testData = {name, surname, gpa}
 
     try {
-        // Создайте новую запись в базе данных
-        const newUser = new User(testData);
-
-        // Сохраните нового пользователя в базе данных и дождитесь выполнения операции
+        const newUser = new Student(testData);
         await newUser.save();
-
-        console.log('Тестовый пользователь успешно добавлен');
-        res.redirect('/'); // Перенаправьте пользователя после успешного добавления
+        console.log('Student успешно добавлен');
+        res.redirect('/');
     } catch (err) {
         console.error(err);
-        res.status(500).send('Ошибка сохранения пользователя');
+        res.status(500).send('Ошибка сохранения student');
+    }
+
+});
+
+
+app.post('/update-student/:id', async (req, res) => {
+    const studentId = req.params.id;
+    const updatedData = req.body;
+    try {
+        // Используем метод findByIdAndUpdate для обновления данных студента
+        const updatedStudent = await Student.findByIdAndUpdate(studentId, updatedData, { new: true });
+
+        if (!updatedStudent) {
+            return res.status(404).send('Студент не найден');
+        }
+
+        // Возвращаем обновленные данные студента в ответе
+        res.json(updatedStudent);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка при обновлении студента');
     }
 });
+
 
 app.listen(port, () => {
 
