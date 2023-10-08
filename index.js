@@ -1,86 +1,88 @@
-const mysql = require("mysql2")
+const mongo = require("mongoose")
 const express = require('express')
-const  app = express()
+const app = express()
 const port = 8787;
 
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'task_w_db'
-});
 
-
-connection.query(`
-    CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) NOT NULL,
-        password VARCHAR(255) NOT NULL
-    );
-`, (err) => {
-    if (err) {
-        console.error('Error creating users table:', err);
-    }
-});
 app.set('view engine', 'ejs')
 app.set('views', './templates')
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 
-app.get('/', (req, res)=>{
-    res.render('index', {test:12455 })
+mongo.connect('mongodb+srv://rysbekdossayev:Istemit_Pidr;@cluster0.guazwsy.mongodb.net/?retryWrites=true&w=majority', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
 })
-app.get('/login', (req, res)=>{
+    .then(() => console.log("Соединение с базой данных установлено"))
+    .catch(err => console.error("Ошибка подключения к базе данных:", err));
+const studentSchema = new mongo.Schema({
+    name: String,
+    surname: String,
+    gpa: Number,
+});
+
+// Создание модели данных на основе схемы
+const Student = mongo.model('Student', studentSchema);
+
+
+(async () => {
+    try {
+        const students = await Student.find({}).exec();
+
+        // students содержит массив всех записей из коллекции
+        console.log(students);
+    } catch (err) {
+        console.error(err);
+    }
+})();
+console.log("efd")
+const userSchema = new mongo.Schema({
+    username: String,
+    password: String,
+});
+
+const User = mongo.model('User', userSchema);
+
+app.get('/', (req, res) => {
+    res.render('index', {test: 12455})
+})
+app.get('/login', (req, res) => {
     res.render('login')
 })
-app.get('/register', (req, res)=>{
+app.get('/register', (req, res) => {
     res.render('register')
 })
-app.post('/register', (req, res) => {
+// app.post('/register', (req, res) => {
+//     const username = req.body.username;
+//     const password = req.body.password;
+//         console.log(username)
+//         console.log(password)
+//
+// });
+
+app.post('/register', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
-        console.log(username)
-        console.log(password)
+    const testData = {
+        username,
+        password
+    };
 
-    connection.query(
-        'INSERT INTO users (username, password) VALUES (?, ?)',
-        [username, password],
-        (err, result) => {
-            if (err) {
-                console.error('Error inserting user:', err);
-                res.status(500).send('Error inserting user');
-                return;
-            }
+    try {
+        // Создайте новую запись в базе данных
+        const newUser = new User(testData);
 
-            console.log('User registered:', username);
-            res.send('User registered');
-        }
-    );
+        // Сохраните нового пользователя в базе данных и дождитесь выполнения операции
+        await newUser.save();
+
+        console.log('Тестовый пользователь успешно добавлен');
+        res.redirect('/'); // Перенаправьте пользователя после успешного добавления
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка сохранения пользователя');
+    }
 });
 
-app.post('/login', (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
-    connection.query(
-        'SELECT * FROM users WHERE username = ? AND password = ?',
-        [username, password],
-        (err, results) => {
-            if (err) {
-                console.error('Error checking user:', err);
-                res.status(500).send('Error checking user');
-                return;
-            }
-
-            if (results.length === 0) {
-                console.log('Authentication failed for:', username);
-                res.status(401).send('Authentication failed');
-            } else {
-                console.log('Authentication successful for:', username);
-                res.send('Authentication successful');
-            }
-        }
-    );
-});
-app.listen(port, ()=>{
+app.listen(port, () => {
 
 })
