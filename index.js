@@ -9,41 +9,47 @@ app.set('views', './templates')
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
-mongo.connect('mongodb+srv://rysbekdossayev:~Istemit_Mal_Pidr_Urlama~@cluster0.guazwsy.mongodb.net/?retryWrites=true&w=majority', {
+mongo.connect('mongodb+srv://rysbekdossayev:Laravel5@cluster0.guazwsy.mongodb.net/?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
     .then(() => console.log("Соединение с базой данных установлено"))
     .catch(err => console.error("Ошибка подключения к базе данных:", err));
-const studentSchema = new mongo.Schema({
+
+const bookSchema = new mongo.Schema({
+    name: String,
+    description:String,
+    ganre:String,
+    author:Number,
+
+});
+const AuthorSchema = new mongo.Schema({
     name: String,
     surname: String,
-    gpa: Number,
+    country: Number,
 });
 
-
-const Student = mongo.model('Student', studentSchema);
-
-
+const Book = mongo.model('Book',bookSchema );
+const Author = mongo.model('Author',AuthorSchema )
 
 app.get('/', async (req, res) => {
     try {
-        const students = await Student.find({}).exec();
+        const students = await Book.find({}).exec();
         res.render('index', { test: 12455, student_list: students });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Ошибка загрузки студентов');
+        res.status(500).send('Ошибка загрузки books');
     }
 })
 
 
-app.get('/login', (req, res) => {
-    res.render('login')
+app.get('/create/book', (req, res) => {
+    res.render('book_create')
 })
-app.get('/add/student', (req, res) => {
-    res.render('add_st')
+app.get('/create/author', (req, res) => {
+    res.render('author_create')
 })
-app.post('/add/student', async (req, res) => {
+app.post('/save/book', async (req, res) => {
     const name = req.body.name;
     const surname = req.body.surname;
     const gpa = req.body.gpa
@@ -52,29 +58,43 @@ app.post('/add/student', async (req, res) => {
     try {
         const newUser = new Student(testData);
         await newUser.save();
-        console.log('Student успешно добавлен');
+        console.log('Book успешно добавлен');
         res.redirect('/');
     } catch (err) {
         console.error(err);
-        res.status(500).send('Ошибка сохранения student');
+        res.status(500).send('Ошибка сохранения Book');
     }
 
 });
 
+app.get('/update-book/:id', async (req, res) => {
 
-app.post('/update-student/:id', async (req, res) => {
-    const studentId = req.params.id;
+    try {
+        let studentId = req.params.id;
+        const student = await Book.findById(studentId);
+        if (!student) {
+            return res.status(404).send('Book не найден');
+        }
+        res.render('book_edit',{ student: student })
+
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('not found  book');
+    }
+});
+
+app.post('/update-book/:id', async (req, res) => {
+    const bookId = req.params.id;
     const updatedData = req.body;
     try {
         // Используем метод findByIdAndUpdate для обновления данных студента
-        const updatedStudent = await Student.findByIdAndUpdate(studentId, updatedData, { new: true });
+        const updatedBook = await Book.findByIdAndUpdate(bookId, updatedData, { new: true });
 
-        if (!updatedStudent) {
-            return res.status(404).send('Студент не найден');
+        if (!updatedBook) {
+            return res.status(404).send('book не найден');
         }
-
-        // Возвращаем обновленные данные студента в ответе
-        res.json(updatedStudent);
+        res.redirect('/update-book/'+bookId);
     } catch (err) {
         console.error(err);
         res.status(500).send('Ошибка при обновлении студента');
