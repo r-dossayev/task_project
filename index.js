@@ -20,13 +20,13 @@ const bookSchema = new mongo.Schema({
     name: String,
     description:String,
     ganre:String,
-    author:Number,
+    author: {},
 
 });
 const AuthorSchema = new mongo.Schema({
     name: String,
     surname: String,
-    country: Number,
+    country: String,
 });
 
 const Book = mongo.model('Book',bookSchema );
@@ -34,8 +34,8 @@ const Author = mongo.model('Author',AuthorSchema )
 
 app.get('/', async (req, res) => {
     try {
-        const students = await Book.find({}).exec();
-        res.render('index', { test: 12455, student_list: students });
+        const books = await Book.find({}).exec();
+        res.render('index', { test: 12455, book_list: books });
     } catch (err) {
         console.error(err);
         res.status(500).send('Ошибка загрузки books');
@@ -43,20 +43,24 @@ app.get('/', async (req, res) => {
 })
 
 
-app.get('/create/book', (req, res) => {
-    res.render('book_create')
+app.get('/create/book', async (req, res) => {
+
+    const authors = await Author.find({}).exec();
+    res.render('book_create', {authors:authors})
 })
 app.get('/create/author', (req, res) => {
     res.render('author_create')
 })
 app.post('/save/book', async (req, res) => {
     const name = req.body.name;
-    const surname = req.body.surname;
-    const gpa = req.body.gpa
-    const testData = {name, surname, gpa}
+    const ganre = req.body.ganre;
+    const description = req.body.description
 
+
+    const author = await Author.find({_id :req.body.author}).exec();
     try {
-        const newUser = new Student(testData);
+        const testData = {name, ganre, description,author}
+        const newUser = new Book(testData);
         await newUser.save();
         console.log('Book успешно добавлен');
         res.redirect('/');
@@ -66,16 +70,33 @@ app.post('/save/book', async (req, res) => {
     }
 
 });
+app.post('/save/author', async (req, res) => {
+    const name = req.body.name;
+    const surname = req.body.surname;
+    const country = req.body.country
+    const testData = {name, surname, country}
+
+    try {
+        const newUser = new Author(testData);
+        await newUser.save();
+        console.log('author успешно добавлен');
+        res.redirect('/');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка сохранения author');
+    }
+
+});
 
 app.get('/update-book/:id', async (req, res) => {
 
     try {
-        let studentId = req.params.id;
-        const student = await Book.findById(studentId);
-        if (!student) {
+        let bookId = req.params.id;
+        const book = await Book.findById(bookId);
+        if (!book) {
             return res.status(404).send('Book не найден');
         }
-        res.render('book_edit',{ student: student })
+        res.render('book_edit',{ book: book })
 
 
     } catch (err) {
