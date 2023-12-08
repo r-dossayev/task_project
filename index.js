@@ -123,6 +123,86 @@ app.post('/update-book/:id', async (req, res) => {
 });
 
 
+// api
+app.get('/api/books', async (req, res) => {
+    try {
+        const books = await Book.find({}).exec();
+        return res.status(200).json({
+            status: true,
+            data: books,
+        });
+        // return res.json(books);
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            error: err,
+        });
+    }
+})
+app.get('/api/books/:id', async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id).exec();
+        if (!book) {
+            return res.status(404).send('Book не найден');
+        }
+        return res.status(200).json({
+            status: true,
+            data: book,
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            status: false,
+            error: err,
+        });
+    }
+})
+app.post('/api/books', async (req, res) => {
+    const name = req.body.name;
+    const ganre = req.body.ganre;
+    const description = req.body.description
+    let author = req.body.author_id
+    author = await Author.findOne({_id :author}).exec();
+    if (!author || !author._id || !name) {
+        return res.status(500).json({
+            status: false,
+            error: 'Не указаны все данные',
+        });
+    }
+    const testData = {name, ganre, description,author}
+    try {
+        const newUser = new Book(testData);
+        await newUser.save();
+        console.log('Book успешно добавлен');
+        return res.status(200).json({
+            status: true,
+            data: newUser,
+        });
+        // return res.json(newUser);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            status: false,
+            error: 'Ошибка сохранения Book',
+        });
+    }
+})
+app.get('/api/authors', async (req, res) => {
+    try {
+        const authors = await Author.find({}).exec();
+        return res.status(200).json({
+            status: true,
+            data: authors,
+        });
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            error: 'Ошибка загрузки authors',
+        });
+    }
+})
+
+
 app.listen(port, () => {
 
 })

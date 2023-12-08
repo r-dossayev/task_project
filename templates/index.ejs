@@ -11,6 +11,11 @@
 
 </head>
 <body>
+<style>
+    a{
+        text-decoration: none;
+    }
+</style>
 
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
@@ -46,9 +51,8 @@
             <div class="col-md-8">
                 <div class="card-body">
                     <h5 class="card-title">Книга</h5>
-
-                        <br> Жанр: <%= book.ganre %> <br> Автор: <%= book.author[0].name %></p>
-                    <p class="card-text"><small class="text-body-secondary">Дата <%= book._id %> </small></p>
+                    <br> Название: <%= book.name %>
+                    <br> Жанр: <%= book.ganre %> <br> Автор: <%= book.author[0].name %></p>
                 </div>
             </div>
         </div>
